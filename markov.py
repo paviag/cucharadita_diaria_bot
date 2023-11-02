@@ -1,10 +1,48 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import re
 import requests
+import ssl
+import nltk
+from nltk.util import ngrams
+from pandas import Series
+from matplotlib.pyplot import subplots
 from bs4 import BeautifulSoup
 from bs4.element import Comment
 
+
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
+
+nltk.download("punkt")
+
+def get_hist(texto, K):
+    """
+    Retorna un histograma de las 10 K-tuplas más repetidas en el texto con sus
+    frecuencias.
+    
+    Parámetros:
+    texto (str): Texto de donde se extraen las K-tuplas.
+    K (int): Grado del modelo de Markov.
+    """
+    
+    token = [c for c in texto]
+    top10 = nltk.FreqDist(dict(nltk.FreqDist(ngrams(token, K)).most_common(n=10)))
+    top10 = Series(dict(top10))
+    fig, ax = subplots(figsize=(10,10))
+    top10.plot(
+      kind="hist",
+      title=f"Frecuencia de las {K}-tuplas",
+      xlabel="Tuplas",
+      ylabel="Frecuencia",
+      ax=ax,
+    )
+    ax.set_xticklabels(["".join(k) for k in top10.keys()])
+    fig.tight_layout()
+    return fig
 
 def tag_visible(element):
     """
@@ -94,15 +132,16 @@ def adjust_text(text):
     text = re.sub(r'((\n)+\s(\n)+)|(\s)+(\n)+(\s)+|\s+', r' ', text)
     return text if text[0]!=' ' else text[1:]
 
-def generate_text(url, K, N):
+def generate_text_hist(url, K, N):
     """
     Genera un texto ficticio partiendo de una url utilizando un modelo de cadenas
-    de Markov. Guarda el texto plano de la url en un archivo .txt.
+    de Markov y un histograma con las frecuencias de las K-tuplas en el mismo.
+    Retorna el texto.
     
     Parámetros:
     url (str): Url del texto original.
-    K (int): Orden K del modelo de Markov.
-    N (int): Longitud en caractéres del texto resultante.
+    K (str): Orden K del modelo de Markov.
+    N (str): Longitud en caractéres del texto resultante.
     """
     if not (K.isdigit() and N.isdigit()):
         raise Exception("K y N deben ser números.")
@@ -134,6 +173,9 @@ def generate_text(url, K, N):
     for i in range(N-K):
         nc = get_next_char(st[-K:], text, K)
         st += nc
-
+    
+    # Se guarda el histograma como hist.png
+    get_hist(st, K).savefig("hist.png", dpi=100)
+    
     # Se retorna el texto resultado
     return st

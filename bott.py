@@ -1,10 +1,14 @@
 from telegram import Update
 from telegram.ext import Application, CommandHandler
-from markov import generate_text
+from markov import generate_text_hist
+import sympy as sp
+import re
 
 
 global gen_text
+global hist
 gen_text = ""
+hist = None
 TOKEN = "6434936644:AAGX-mGnmAhgYa_wtU4WJ4IvsBZceWSw2Gc"
 
 def cifrado_cesar(msj_ingresado, desp, cif):
@@ -18,7 +22,7 @@ def cifrado_cesar(msj_ingresado, desp, cif):
     cif (boolean): True si se va a cifrar. False si se va a descifrar.
     """
     # Define el alfabeto
-    alfabeto = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.áéíóú?!¿¡'
+    alfabeto = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.áéíóú?!¿¡"
     
     # Cambia el signo de la variable desp dependiendo si se va a hacer un desplazamiento
     # a la izquierda/negativo (descifrar) o a la derecha/positivo (cifrar)
@@ -62,13 +66,56 @@ async def ayuda_command(update, context):
     
 async def cifrado_command(update, context): 
     """Función correspondiente al comando /cifrado"""
-    await update.message.reply_text("cifrado")
-
+    
+    # arg contendrá las palabras que el usuario haya enviado después del comando /cifrado
+    arg = update.message.text.split(" ")[1:]
+    
+    # Si el número de argumentos después de escribir el comando está entre 2 y 3, se asume que
+    # estos argumentos corresponden a des, msj y desp (si se incluye)
+    if 2 <= len(arg) <= 3:
+        # Si solo da dos argumentos, se asume el desp por defecto 5
+        if len(arg) == 2:
+            arg.append("5")
+            
+        try:
+            # Si desp no cumple el formato, se notifica al usuario del error
+            if not arg[2].isdigit():
+                raise Exception("'desp' debe ser un número entero positivo.")
+            
+            # Se realiza el cifrado/descifrado del msj
+            if arg[0] == "cif":
+                res = cifrado_cesar(arg[1], int(arg[2]), True)
+            elif arg[0] == "des":
+                res = cifrado_cesar(arg[1], int(arg[2]), False)
+            else:
+                # Si el argumento no está dentro de las opciones, se notifica al usuario
+                raise Exception("Debe indicar 'des' para descifrar o 'cif' para cifrar.")
+            
+            # Se envía al usuario el mensaje resultante y el desplazamiento usado
+            await update.message.reply_text(
+                "Su mensaje cifrado con desplazamiento "+arg[2]+":\n"
+                +res
+            )
+        except Exception as e:
+            # Si ocurre algún error, se indica al usuario qué ocurrió
+            await update.message.reply_text(
+                "Cometió un error escribiendo el comando. Recuerde: "+str(e)
+            )
+    else:
+        # En cualquier otro caso, se le indica al usuario cómo usar el comando
+        await update.message.reply_text(
+            "Para cifrar un mensaje, escriba '/cifrado cif msj desp'.\n"
+            +"Para descifrar, escriba '/cifrado des msj desp'.\n"
+            +"Reemplace 'msj' por el mensaje que desea cifrar/descifrar "
+            +"y 'desp' por el desplazamiento a aplicar según el cifrado "
+            +"césar. El desplazamiento es opcional, pero si no se ingresa, "
+            +"se asumirá que desp = 5."
+        )
+        
 async def markov_command(update, context): 
     """Función correspondiente al comando /markov"""
     global gen_text
-    print(update.message)
-    print(context.args)
+    global hist
     # arg contendrá las palabras que el usuario haya enviado después del comando /markov
     arg = update.message.text.split(" ")[1:]
     
@@ -93,20 +140,19 @@ async def markov_command(update, context):
             # Si hay 3 palabras se asumen que son url, K, N y se trata de generar el texto
             try:
                 # El texto se almacena en la variable global gen_text
-                gen_text = generate_text(arg[0], arg[1], arg[2])
+                gen_text = generate_text_hist(arg[0], arg[1], arg[2])
                 # Se notifica al usuario de la generación exitosa del texto
                 await update.message.reply_text("Su texto ficticio ha sido creado.")
             except Exception as e:
                 # Si ocurre algún error, se indica al usuario qué ocurrió
                 await update.message.reply_text(str(e))
         elif arg[0] == "hist":
-            #await context.bot.send_photo(chat_id=update.message.chat_id, photo=r"filename")
-            pass
+            await context.bot.send_photo(chat_id=update.message.chat_id, photo=r"hist.png")
         elif arg[0] == "texto":
             # Se escribe al usuario el texto anteriormente generado almacenado en gen_text
             await update.message.reply_text(gen_text)
     
-    if gen_text != "" and (len(arg) == 0 or not arg[1] in ["hist", "texto"]):
+    if gen_text != "" and (len(arg) == 0 or (len(arg) > 0 and not arg[1] in ["hist", "texto"])):
         # Si ya fue generado texto anteriormente y el usuario no invocó las funciones
         # de mostrar histograma o texto, se le informa acerca de estas funciones
         await update.message.reply_text(
