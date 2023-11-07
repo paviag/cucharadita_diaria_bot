@@ -1,9 +1,8 @@
 from telegram import Update
-from telegram.ext import Application, CommandHandler
+from telegram.ext import Application, CommandHandler, CallbackContext
 from markov import generate_text_hist
-import sympy as sp
-import re
 from cifrado_cesar import cifrado_cesar
+from rrlnhcc import sol_rrlnhcc
 
 
 global gen_text
@@ -15,17 +14,18 @@ TOKEN = "6434936644:AAGX-mGnmAhgYa_wtU4WJ4IvsBZceWSw2Gc"
 async def start_command(update, context): 
     """Función correspondiente al comando /start"""
     await update.message.reply_text(
-        "Hola"
+        "Hola, este es tu bot 'cucharadita diaria'. Escribe /ayuda para ver los comandos."
     )
-    
+
 async def ayuda_command(update, context):
     """/ayuda"""
     await update.message.reply_text(
-        "Lista de comandos disponibles:\n"
+        "Bienvenido al Bot de Asistencia 'cucharadita diaria'. Aquí tienes algunos comandos que puedes usar:\n"
         +"/start - Mensaje de bienvenida.\n"
         +"/ayuda - Indica los comandos disponibles y su función.\n"
         +"/cifrado - \n"
-        +"/markov - Permite generar textos con cadenas de Markov partiendo de una URL."
+        +"/markov - Permite generar textos con cadenas de Markov partiendo de una URL.\n"
+        +"/RRLNHCC - Resuelve una recurrencia lineal no homogénea con coeficientes constantes."
     )
     
 async def cifrado_command(update, context): 
@@ -128,6 +128,32 @@ async def markov_command(update, context):
             +"escriba '/markov URL K N' para generar su texto."
         )
 
+async def rrlnhcc_command(update: Update, context: CallbackContext):
+    args = context.args
+    if not args:
+        await update.message.reply_text(
+            "Para resolver una recurrencia lineal no homogénea con coeficientes constantes, "
+            "necesitas proporcionar la función recurrente y las condiciones iniciales.\n\n"
+            "Usa el comando de la siguiente manera:\n"
+            "/RRLNHCC f(n)=a*f(n-1)+b*f(n-2)+...,f(0)=c,f(1)=d,...\n\n"
+            "Por ejemplo:\n"
+            "/RRLNHCC f(n)=2*f(n-1)+3*f(n-2),f(0)=1,f(1)=2",
+            parse_mode='Markdown'
+        )
+        return
+
+    input_str = ' '.join(args)
+    try:
+        result_str, result_values = sol_rrlnhcc(input_str)
+        await update.message.reply_text(result_str)
+        for value in result_values:
+            await update.message.reply_text(value)
+    except Exception as e:
+        await update.message.reply_text(
+            f"Error al procesar la recurrencia: {e}\n\n"
+            "Asegúrate de que la función y las condiciones iniciales estén escritas correctamente."
+        )
+
 async def error(update, context): 
     print(f"Update {update} caused error {context.error}")
 
@@ -139,6 +165,7 @@ def main():
     app.add_handler(CommandHandler("ayuda", ayuda_command)) 
     app.add_handler(CommandHandler("cifrado", cifrado_command)) 
     app.add_handler(CommandHandler("markov", markov_command))
+    app.add_handler(CommandHandler("RRLNHCC", rrlnhcc_command))
     # Manejo de errores
     app.add_error_handler(error)
     # Run the bot until the user presses Ctrl-C
