@@ -1,8 +1,9 @@
-from telegram import Update
+from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackContext
 from markov import generate_text_hist
 from cifrado_cesar import cifrado_cesar
 from rrlnhcc import sol_rrlnhcc
+import simbolico as sim
 
 
 global gen_text
@@ -11,13 +12,13 @@ gen_text = ""
 hist = None
 TOKEN = "6434936644:AAGX-mGnmAhgYa_wtU4WJ4IvsBZceWSw2Gc"
 
-async def start_command(update, context): 
+async def start_command(update: Update, context: CallbackContext): 
     """Función correspondiente al comando /start"""
     await update.message.reply_text(
         "Hola, este es tu bot 'cucharadita diaria'. Escribe /ayuda para ver los comandos."
     )
 
-async def ayuda_command(update, context):
+async def ayuda_command(update: Update, context: CallbackContext):
     """/ayuda"""
     await update.message.reply_text(
         "Bienvenido al Bot de Asistencia 'cucharadita diaria'. Aquí tienes algunos comandos que puedes usar:\n"
@@ -28,11 +29,11 @@ async def ayuda_command(update, context):
         +"/RRLNHCC - Resuelve una recurrencia lineal no homogénea con coeficientes constantes."
     )
     
-async def cifrado_command(update, context): 
+async def cifrado_command(update: Update, context: CallbackContext): 
     """Función correspondiente al comando /cifrado"""
     
     # arg contendrá las palabras que el usuario haya enviado después del comando /cifrado
-    arg = update.message.text.split(" ")[1:]
+    arg = context.args
     
     # Si el número de argumentos después de escribir el comando está entre 2 y 3, se asume que
     # estos argumentos corresponden a des, msj y desp (si se incluye)
@@ -76,12 +77,12 @@ async def cifrado_command(update, context):
             +"se asumirá que desp = 5."
         )
         
-async def markov_command(update, context): 
+async def markov_command(update: Update, context: CallbackContext): 
     """Función correspondiente al comando /markov"""
     global gen_text
     global hist
     # arg contendrá las palabras que el usuario haya enviado después del comando /markov
-    arg = update.message.text.split(" ")[1:]
+    arg = context.args
     
     if gen_text == "" and len(arg) != 3:
         # Si no hay texto generado, y el usuario no dio indicaciones para generarlo,
@@ -116,7 +117,12 @@ async def markov_command(update, context):
             # Se escribe al usuario el texto anteriormente generado almacenado en gen_text
             await update.message.reply_text(gen_text)
     
-    if gen_text != "" and (len(arg) == 0 or (len(arg) > 0 and not arg[1] in ["hist", "texto"])):
+    #if gen_text != "" and (len(arg) == 0 or (len(arg) > 0 and not arg[1] in ["hist", "texto"])):
+    if gen_text != "":
+        if len(arg) > 0:
+            if arg[1] in ["hist", "texto"]:
+                return
+            
         # Si ya fue generado texto anteriormente y el usuario no invocó las funciones
         # de mostrar histograma o texto, se le informa acerca de estas funciones
         await update.message.reply_text(
@@ -130,6 +136,7 @@ async def markov_command(update, context):
 
 async def rrlnhcc_command(update: Update, context: CallbackContext):
     args = context.args
+    
     if not args:
         await update.message.reply_text(
             "Para resolver una recurrencia lineal no homogénea con coeficientes constantes, "
@@ -154,7 +161,54 @@ async def rrlnhcc_command(update: Update, context: CallbackContext):
             "Asegúrate de que la función y las condiciones iniciales estén escritas correctamente."
         )
 
-async def error(update, context): 
+async def simbolico_command(update: Update, context: CallbackContext):
+    """Función principal del Problema 1"""
+    datos = [(2,'10'), (2,['010']), (3,['12']), (3,'012'), '', '', (5, ['01','43'])]
+    args = context.args
+    
+    if len(args) < 1:
+        await update.message.reply_text(
+            "Para ver la solución de un problema por método simbólico, debe indicar el "
+            +"valor de n, un entero no negativo, escribiendo '/simbolico n'."
+        )
+    elif not args[0].isdigit():
+        await update.message.reply_text(
+            "n debe ser un entero no negativo. Intente de nuevo."
+        )
+    else:
+        n = int(args[0])
+        
+        await update.message.reply_text(
+            '\nMENÚ:'
+            +'- Cadenas Binarias, de longitud n, que:\n  1. Contengan la subcadena ’10’\n  2. Que No contengan ’010’\n'
+            +'- Cadenas Ternarias, de longitud n, que:\n  3. No contengan la subcadena ’12’\n  4. Que contengan la subcadena ’012’\n  5. Que contengan un número par de unos\n'
+            +'- Cadenas númericas, de longitud n, de base cinco que:\n  6. Tengan sus caracteres en orden creciente. Ejemplo ’01122234’\n  7. Que No contengan las subcadenas ’01’ ni ’43’\n'
+            +'8. Salir del programa'
+        )
+
+        opc = input('Ingrese la opción escogida: ') 
+        while not opc in [str(i) for i in range(1,9)]: 
+            opc = input('Opción inválida. Intente de nuevo.\nIngrese la opción escogida: ')
+        opc = int(opc)
+
+        if opc == 8:
+            await update.message.reply_text('** FINALIZANDO EJECUCIÓN **')
+        else:
+            print('Las cadenas generadas para esta opción son:')
+            if opc in [2, 3, 7]:
+                r = sim.cad_sin_restr(n, datos[opc-1][0], datos[opc-1][1])
+            elif opc in [1, 4]:
+                r = sim.cad_con_subcad(n, datos[opc-1][0], datos[opc-1][1])
+            elif opc == 5:
+                r = sim.cad_par_unos(n)
+            elif opc == 6:
+                r = sim.cad_crecientes(n)
+            await update.message.reply_text(
+                'Las cadenas generadas para esta opción son:'
+                +f'{r}\n({len(r)} cadenas resultantes)'
+            )
+
+async def error(update: Update, context: CallbackContext): 
     print(f"Update {update} caused error {context.error}")
 
 def main():

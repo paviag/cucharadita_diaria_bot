@@ -88,39 +88,3 @@ def cad_sin_restr(n, b, restr):
       if can_append:
         new.append(z+char)
   return new
-
-def problema1():
-  """Función principal del Problema 1"""
-  datos = [(2,'10'), (2,['010']), (3,['12']), (3,'012'), '', '', (5, ['01','43'])]
-
-  while True:
-    print('\nMENÚ:')
-    print('- Cadenas Binarias, de longitud n, que:\n  1. Contengan la subcadena ’10’\n  2. Que No contengan ’010’')
-    print('- Cadenas Ternarias, de longitud n, que:\n  3. No contengan la subcadena ’12’\n  4. Que contengan la subcadena ’012’\n  5. Que contengan un número par de unos')
-    print('- Cadenas númericas, de longitud n, de base cinco que:\n  6. Tengan sus caracteres en orden creciente. Ejemplo ’01122234’\n  7. Que No contengan las subcadenas ’01’ ni ’43’')
-    print('8. Salir del programa')
-
-    opc = input('Ingrese la opción escogida: ') 
-    while not opc in [str(i) for i in range(1,9)]: 
-      opc = input('Opción inválida. Intente de nuevo.\nIngrese la opción escogida: ')
-    opc = int(opc)
-
-    if opc == 8:
-      print('\n** FINALIZANDO EJECUCIÓN **')
-      break
-    n = input('Ingrese el valor de n: ')
-    while not n.isdecimal(): 
-      n = input('Ingrese el valor de n: ')
-    n = int(n)
-
-    print('Las cadenas generadas para esta opción son:')
-    if opc in [2, 3, 7]:
-      r = cad_sin_restr(n, datos[opc-1][0], datos[opc-1][1])
-    elif opc in [1, 4]:
-      r = cad_con_subcad(n, datos[opc-1][0], datos[opc-1][1])
-      pass
-    elif opc == 5:
-      r = cad_par_unos(n)
-    elif opc == 6:
-      r = cad_crecientes(n)
-    print(f'{r}\n({len(r)} cadenas resultantes)')
