@@ -1,5 +1,5 @@
-from telegram import Update, ReplyKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackContext
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler
 from markov import generate_text_hist
 from cifrado_cesar import cifrado_cesar
 from rrlnhcc import sol_rrlnhcc
@@ -11,25 +11,26 @@ global hist
 gen_text = ""
 hist = None
 TOKEN = "6434936644:AAGX-mGnmAhgYa_wtU4WJ4IvsBZceWSw2Gc"
+OPTION = 0
 
-async def start_command(update: Update, context: CallbackContext): 
+async def start_command(update, context): 
     """Función correspondiente al comando /start"""
     await update.message.reply_text(
         "Hola, este es tu bot 'cucharadita diaria'. Escribe /ayuda para ver los comandos."
     )
 
-async def ayuda_command(update: Update, context: CallbackContext):
+async def ayuda_command(update, context):
     """/ayuda"""
     await update.message.reply_text(
         "Bienvenido al Bot de Asistencia 'cucharadita diaria'. Aquí tienes algunos comandos que puedes usar:\n"
         +"/start - Mensaje de bienvenida.\n"
         +"/ayuda - Indica los comandos disponibles y su función.\n"
-        +"/cifrado - \n"
+        +"/cifrado - Permite cifrar o descifrar un mensaje de acuerdo al cifrado césar.\n"
         +"/markov - Permite generar textos con cadenas de Markov partiendo de una URL.\n"
-        +"/RRLNHCC - Resuelve una recurrencia lineal no homogénea con coeficientes constantes."
+        +"/rrlnhcc - Resuelve una recurrencia lineal no homogénea con coeficientes constantes."
     )
     
-async def cifrado_command(update: Update, context: CallbackContext): 
+async def cifrado_command(update, context): 
     """Función correspondiente al comando /cifrado"""
     
     # arg contendrá las palabras que el usuario haya enviado después del comando /cifrado
@@ -77,7 +78,7 @@ async def cifrado_command(update: Update, context: CallbackContext):
             +"se asumirá que desp = 5."
         )
         
-async def markov_command(update: Update, context: CallbackContext): 
+async def markov_command(update, context): 
     """Función correspondiente al comando /markov"""
     global gen_text
     global hist
@@ -134,7 +135,7 @@ async def markov_command(update: Update, context: CallbackContext):
             +"escriba '/markov URL K N' para generar su texto."
         )
 
-async def rrlnhcc_command(update: Update, context: CallbackContext):
+async def rrlnhcc_command(update, context):
     args = context.args
     
     if not args:
@@ -149,7 +150,7 @@ async def rrlnhcc_command(update: Update, context: CallbackContext):
         )
         return
 
-    input_str = ' '.join(args)
+    input_str = " ".join(args)
     try:
         result_str, result_values = sol_rrlnhcc(input_str)
         await update.message.reply_text(result_str)
@@ -161,12 +162,37 @@ async def rrlnhcc_command(update: Update, context: CallbackContext):
             "Asegúrate de que la función y las condiciones iniciales estén escritas correctamente."
         )
 
-async def simbolico_command(update: Update, context: CallbackContext):
-    """Función principal del Problema 1"""
+async def simbolico_callback(update, context):
+    """Función auxiliar para comando /simbolico"""
+    
+    n, opc = update.callback_query.data.split(" ")
+    await update.callback_query.answer()
+    
+    n = int(n)
+    opc = int(opc)
     datos = [(2,'10'), (2,['010']), (3,['12']), (3,'012'), '', '', (5, ['01','43'])]
+    
+    if opc == 8:
+        await update.callback_query.message.reply_text("FINALIZANDO EJECUCIÓN")
+    else:
+        if opc in [2, 3, 7]:
+            r = sim.cad_sin_restr(n, datos[opc-1][0], datos[opc-1][1])
+        elif opc in [1, 4]:
+            r = sim.cad_con_subcad(n, datos[opc-1][0], datos[opc-1][1])
+        elif opc == 5:
+            r = sim.cad_par_unos(n)
+        elif opc == 6:
+            r = sim.cad_crecientes(n)
+        await update.callback_query.message.reply_text(
+            f"Las cadenas generadas para la opción {opc} son:\n"
+            +f"{r}\n({len(r)} cadenas resultantes)"
+        )
+    
+async def simbolico_command(update, context):
+    """Función correspondiente al comando /simbolico"""
     args = context.args
     
-    if len(args) < 1:
+    if len(args) != 1:
         await update.message.reply_text(
             "Para ver la solución de un problema por método simbólico, debe indicar el "
             +"valor de n, un entero no negativo, escribiendo '/simbolico n'."
@@ -176,42 +202,25 @@ async def simbolico_command(update: Update, context: CallbackContext):
             "n debe ser un entero no negativo. Intente de nuevo."
         )
     else:
-        n = int(args[0])
-        
-        await update.message.reply_text(
-            '\nMENÚ:'
-            +'- Cadenas Binarias, de longitud n, que:\n  1. Contengan la subcadena ’10’\n  2. Que No contengan ’010’\n'
-            +'- Cadenas Ternarias, de longitud n, que:\n  3. No contengan la subcadena ’12’\n  4. Que contengan la subcadena ’012’\n  5. Que contengan un número par de unos\n'
-            +'- Cadenas númericas, de longitud n, de base cinco que:\n  6. Tengan sus caracteres en orden creciente. Ejemplo ’01122234’\n  7. Que No contengan las subcadenas ’01’ ni ’43’\n'
-            +'8. Salir del programa'
-        )
+        if len(args) == 1:
+            keyboard = [[]]
+            for i in range(1, 9):
+                keyboard[0].append(InlineKeyboardButton(str(i), callback_data=f"{args[0]} {i}"))
 
-        opc = input('Ingrese la opción escogida: ') 
-        while not opc in [str(i) for i in range(1,9)]: 
-            opc = input('Opción inválida. Intente de nuevo.\nIngrese la opción escogida: ')
-        opc = int(opc)
-
-        if opc == 8:
-            await update.message.reply_text('** FINALIZANDO EJECUCIÓN **')
-        else:
-            print('Las cadenas generadas para esta opción son:')
-            if opc in [2, 3, 7]:
-                r = sim.cad_sin_restr(n, datos[opc-1][0], datos[opc-1][1])
-            elif opc in [1, 4]:
-                r = sim.cad_con_subcad(n, datos[opc-1][0], datos[opc-1][1])
-            elif opc == 5:
-                r = sim.cad_par_unos(n)
-            elif opc == 6:
-                r = sim.cad_crecientes(n)
             await update.message.reply_text(
-                'Las cadenas generadas para esta opción son:'
-                +f'{r}\n({len(r)} cadenas resultantes)'
+                "Opciones disponibles:\n"
+                +"- Cadenas Binarias, de longitud n, que:\n  1. Contengan la subcadena '10'\n  2. Que No contengan '010'\n"
+                +"- Cadenas Ternarias, de longitud n, que:\n  3. No contengan la subcadena '12'\n  4. Que contengan la subcadena '012'\n  5. Que contengan un número par de unos\n"
+                +"- Cadenas númericas, de longitud n, de base cinco que:\n  6. Tengan sus caracteres en orden creciente.\n  7. Que No contengan las subcadenas '01' ni '43'\n"
+                +"8. Salir del programa",
+                reply_markup=InlineKeyboardMarkup(keyboard)
             )
 
-async def error(update: Update, context: CallbackContext): 
+async def error(update, context): 
     print(f"Update {update} caused error {context.error}")
 
 def main():
+    print("Iniciando bot...")
     # Construye el bot
     app = Application.builder().token(TOKEN).build()
     # Añade comandos
@@ -220,6 +229,8 @@ def main():
     app.add_handler(CommandHandler("cifrado", cifrado_command)) 
     app.add_handler(CommandHandler("markov", markov_command))
     app.add_handler(CommandHandler("rrlnhcc", rrlnhcc_command))
+    app.add_handler(CommandHandler("simbolico", simbolico_command))
+    app.add_handler(CallbackQueryHandler(simbolico_callback))
     # Manejo de errores
     app.add_error_handler(error)
     # Run the bot until the user presses Ctrl-C
