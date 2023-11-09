@@ -20,7 +20,7 @@ async def start_command(update, context):
     )
 
 async def ayuda_command(update, context):
-    """/ayuda"""
+    """Función correspondiente al comando /ayuda"""
     await update.message.reply_text(
         "Bienvenido al Bot de Asistencia 'cucharadita diaria'. Aquí tienes algunos comandos que puedes usar:\n"
         +"/start - Mensaje de bienvenida.\n"
@@ -138,6 +138,7 @@ async def markov_command(update, context):
 async def rrlnhcc_command(update, context):
     args = context.args
     
+    # Si el usuario no escribe argumentos, se le indica cómo usar el comando
     if not args:
         await update.message.reply_text(
             "Para resolver una recurrencia lineal no homogénea con coeficientes constantes, "
@@ -146,47 +147,50 @@ async def rrlnhcc_command(update, context):
             "/rrlnhcc f(n)=a*f(n-1)+b*f(n-2)+...,f(0)=c,f(1)=d,...\n\n"
             "Por ejemplo:\n"
             "/rrlnhcc f(n)=2*f(n-1)+3*f(n-2),f(0)=1,f(1)=2",
-            parse_mode='Markdown'
+            parse_mode="Markdown"
         )
         return
 
     input_str = " ".join(args)
     try:
+        # Se ejecuta la función sol_rrlnhcc de la entrega 1 sobre los argumentos dados
         result_str, result_values = sol_rrlnhcc(input_str)
+        # Se responde al usuario con la expresión y los valores respuesta
         await update.message.reply_text(result_str)
         for value in result_values:
             await update.message.reply_text(value)
     except Exception as e:
+        # Si ocurre algun error se le notifica al usuario
         await update.message.reply_text(
             f"Error al procesar la recurrencia: {e}\n\n"
             "Asegúrate de que la función y las condiciones iniciales estén escritas correctamente."
         )
 
 async def simbolico_callback(update, context):
-    """Función auxiliar para comando /simbolico"""
+    """Función auxiliar para comando /simbolico. Se ejecuta tras desplegarse el InlineKeyboard."""
     
+    # Se obtienen n y la opción desde el CallbackQuery del botón presionado
     n, opc = update.callback_query.data.split(" ")
     await update.callback_query.answer()
     
     n = int(n)
     opc = int(opc)
-    datos = [(2,'10'), (2,['010']), (3,['12']), (3,'012'), '', '', (5, ['01','43'])]
+    datos = [(2,"10"), (2,["010"]), (3,["12"]), (3,"012"), "", "", (5,["01","43"])]
     
-    if opc == 8:
-        await update.callback_query.message.reply_text("FINALIZANDO EJECUCIÓN")
-    else:
-        if opc in [2, 3, 7]:
-            r = sim.cad_sin_restr(n, datos[opc-1][0], datos[opc-1][1])
-        elif opc in [1, 4]:
-            r = sim.cad_con_subcad(n, datos[opc-1][0], datos[opc-1][1])
-        elif opc == 5:
-            r = sim.cad_par_unos(n)
-        elif opc == 6:
-            r = sim.cad_crecientes(n)
-        await update.callback_query.message.reply_text(
-            f"Las cadenas generadas para la opción {opc} son:\n"
-            +f"{r}\n({len(r)} cadenas resultantes)"
-        )
+    # Se ejecutan las funciones de acuerdo a la opción escogida
+    if opc in [2, 3, 7]:
+        r = sim.cad_sin_restr(n, datos[opc-1][0], datos[opc-1][1])
+    elif opc in [1, 4]:
+        r = sim.cad_con_subcad(n, datos[opc-1][0], datos[opc-1][1])
+    elif opc == 5:
+        r = sim.cad_par_unos(n)
+    elif opc == 6:
+        r = sim.cad_crecientes(n)
+    # Se responde al usuario con el resultado
+    await update.callback_query.message.reply_text(
+        f"Las cadenas generadas para la opción {opc} son:\n"
+        +f"{r}\n({len(r)} cadenas resultantes)"
+    )
     
 async def simbolico_command(update, context):
     """Función correspondiente al comando /simbolico"""
@@ -204,15 +208,14 @@ async def simbolico_command(update, context):
     else:
         if len(args) == 1:
             keyboard = [[]]
-            for i in range(1, 9):
+            for i in range(1, 8):
                 keyboard[0].append(InlineKeyboardButton(str(i), callback_data=f"{args[0]} {i}"))
 
             await update.message.reply_text(
                 "Opciones disponibles:\n"
                 +"- Cadenas Binarias, de longitud n, que:\n  1. Contengan la subcadena '10'\n  2. Que No contengan '010'\n"
                 +"- Cadenas Ternarias, de longitud n, que:\n  3. No contengan la subcadena '12'\n  4. Que contengan la subcadena '012'\n  5. Que contengan un número par de unos\n"
-                +"- Cadenas númericas, de longitud n, de base cinco que:\n  6. Tengan sus caracteres en orden creciente.\n  7. Que No contengan las subcadenas '01' ni '43'\n"
-                +"8. Salir del programa",
+                +"- Cadenas númericas, de longitud n, de base cinco que:\n  6. Tengan sus caracteres en orden creciente.\n  7. Que No contengan las subcadenas '01' ni '43'\n",
                 reply_markup=InlineKeyboardMarkup(keyboard)
             )
 
