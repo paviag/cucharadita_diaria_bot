@@ -142,9 +142,9 @@ async def rrlnhcc_command(update: Update, context: CallbackContext):
             "Para resolver una recurrencia lineal no homogénea con coeficientes constantes, "
             "necesitas proporcionar la función recurrente y las condiciones iniciales.\n\n"
             "Usa el comando de la siguiente manera:\n"
-            "/RRLNHCC f(n)=a*f(n-1)+b*f(n-2)+...,f(0)=c,f(1)=d,...\n\n"
+            "/rrlnhcc f(n)=a*f(n-1)+b*f(n-2)+...,f(0)=c,f(1)=d,...\n\n"
             "Por ejemplo:\n"
-            "/RRLNHCC f(n)=2*f(n-1)+3*f(n-2),f(0)=1,f(1)=2",
+            "/rrlnhcc f(n)=2*f(n-1)+3*f(n-2),f(0)=1,f(1)=2",
             parse_mode='Markdown'
         )
         return
@@ -219,7 +219,7 @@ def main():
     app.add_handler(CommandHandler("ayuda", ayuda_command)) 
     app.add_handler(CommandHandler("cifrado", cifrado_command)) 
     app.add_handler(CommandHandler("markov", markov_command))
-    app.add_handler(CommandHandler("RRLNHCC", rrlnhcc_command))
+    app.add_handler(CommandHandler("rrlnhcc", rrlnhcc_command))
     # Manejo de errores
     app.add_error_handler(error)
     # Run the bot until the user presses Ctrl-C
