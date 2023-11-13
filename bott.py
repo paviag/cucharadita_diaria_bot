@@ -35,11 +35,13 @@ async def cifrado_command(update, context):
     # arg contendrá las palabras que el usuario haya enviado después del comando /cifrado
     arg = context.args
     
+    # Extrae mensaje a cifrar/descifrar
     try:
         msj = arg[arg.index("m:")+1:]
     except:
         msj = None
-        
+    
+    # Extrae desplazamiento
     try:
         desp = " ".join(arg[arg.index("d:")+1:])
         if msj:
