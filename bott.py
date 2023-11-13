@@ -11,7 +11,6 @@ global hist
 gen_text = ""
 hist = None
 TOKEN = "6434936644:AAGX-mGnmAhgYa_wtU4WJ4IvsBZceWSw2Gc"
-OPTION = 0
 
 async def start_command(update, context): 
     """Función correspondiente al comando /start"""
@@ -36,46 +35,59 @@ async def cifrado_command(update, context):
     # arg contendrá las palabras que el usuario haya enviado después del comando /cifrado
     arg = context.args
     
-    # Si el número de argumentos después de escribir el comando está entre 2 y 3, se asume que
-    # estos argumentos corresponden a des, msj y desp (si se incluye)
-    if 2 <= len(arg) <= 3:
-        # Si solo da dos argumentos, se asume el desp por defecto 5
-        if len(arg) == 2:
-            arg.append("5")
-            
+    try:
+        msj = arg[arg.index("m:")+1:]
+    except:
+        msj = None
+        
+    try:
+        desp = " ".join(arg[arg.index("d:")+1:])
+        if msj:
+            msj = msj[:msj.index("d:")]
+    except:
+        desp = "0"
+    
+    if msj != None:
+        msj = " ".join(msj)
+    
+    if msj != None:
         try:
             # Si desp no cumple el formato, se notifica al usuario del error
-            if not arg[2].isdigit():
+            if not desp.isdigit() or (desp == "0" and arg[0] == "cif"):
                 raise Exception("'desp' debe ser un número entero positivo.")
             
             # Se realiza el cifrado/descifrado del msj
             if arg[0] == "cif":
-                res = cifrado_cesar(arg[1], int(arg[2]), True)
+                res, desp = cifrado_cesar(msj, int(desp), True)
             elif arg[0] == "des":
-                res = cifrado_cesar(arg[1], int(arg[2]), False)
+                res, desp = cifrado_cesar(msj, int(desp), False)
             else:
                 # Si el argumento no está dentro de las opciones, se notifica al usuario
                 raise Exception("Debe indicar 'des' para descifrar o 'cif' para cifrar.")
             
+            if desp == 73:
+                await update.message.reply_text(
+                    "No se encontró un desplazamiento que generara una oración con sentido."
+                )
             # Se envía al usuario el mensaje resultante y el desplazamiento usado
             await update.message.reply_text(
-                "Su mensaje cifrado con desplazamiento "+arg[2]+":\n"
-                +res
+                f"Su mensaje cifrado con desplazamiento {desp}:\n{res}"
             )
         except Exception as e:
             # Si ocurre algún error, se indica al usuario qué ocurrió
             await update.message.reply_text(
-                "Cometió un error escribiendo el comando. Recuerde: "+str(e)
+                "Cometió un error escribiendo el comando. Revise: "+str(e)
             )
     else:
         # En cualquier otro caso, se le indica al usuario cómo usar el comando
         await update.message.reply_text(
-            "Para cifrar un mensaje, escriba '/cifrado cif msj desp'.\n"
-            +"Para descifrar, escriba '/cifrado des msj desp'.\n"
+            "Para cifrar un mensaje, escriba '/cifrado cif m: msj d: desp'.\n"
+            +"Para descifrar, escriba '/cifrado des m: msj d: desp'.\n"
             +"Reemplace 'msj' por el mensaje que desea cifrar/descifrar "
             +"y 'desp' por el desplazamiento a aplicar según el cifrado "
-            +"césar. El desplazamiento es opcional, pero si no se ingresa, "
-            +"se asumirá que desp = 5."
+            +"césar. El desplazamiento es opcional, pero solo para descifrar; "
+            +"si no se ingresa o se ingresa '0', se tratará de buscar el mejor "
+            +"desplazamiento."
         )
         
 async def markov_command(update, context): 
