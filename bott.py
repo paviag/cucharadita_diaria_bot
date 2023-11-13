@@ -15,7 +15,7 @@ TOKEN = "6434936644:AAGX-mGnmAhgYa_wtU4WJ4IvsBZceWSw2Gc"
 async def start_command(update, context): 
     """Función correspondiente al comando /start"""
     await update.message.reply_text(
-        "Hola, este es tu bot 'cucharadita diaria'. Escribe /ayuda para ver los comandos."
+        "¡Bienvenido querido usuario!\n este es tu bot 'cucharadita diaria'. Escribe /ayuda para ver los comandos."
     )
 
 async def ayuda_command(update, context):
@@ -26,7 +26,8 @@ async def ayuda_command(update, context):
         +"/ayuda - Indica los comandos disponibles y su función.\n"
         +"/cifrado - Permite cifrar o descifrar un mensaje de acuerdo al cifrado césar.\n"
         +"/markov - Permite generar textos con cadenas de Markov partiendo de una URL.\n"
-        +"/rrlnhcc - Resuelve una recurrencia lineal no homogénea con coeficientes constantes."
+        +"/rrlnhcc - Resuelve una recurrencia lineal no homogénea con coeficientes constantes.\n"
+        +"/simbolico - Resuelve un problema por método simbólico."
     )
     
 async def cifrado_command(update, context): 
