@@ -1,4 +1,14 @@
 def cad_par_unos(n):
+  """
+    Genera todas las cadenas de longitud n compuestas por los dígitos 0, 1, y 2,
+    donde el número de '1's es par.
+
+    Parámetros:
+    n (int): Longitud de las cadenas a generar.
+
+    Retorna:
+    list: Una lista de cadenas que cumplen con la condición especificada.
+  """
   if n == 0:
     return ['']
 
@@ -24,6 +34,16 @@ def cad_par_unos(n):
   return new
 
 def cad_crecientes(n):
+  """
+    Genera todas las cadenas de longitud n con dígitos en orden no decreciente,
+    usando los dígitos 0, 1, 2, 3, y 4.
+
+    Parámetros:
+    n (int): Longitud de las cadenas a generar.
+
+    Retorna:
+    list: Una lista de cadenas en orden no decreciente.
+  """
   if n == 0:
     return ['']
   prev = [str(i) for i in range(5)]
@@ -39,7 +59,18 @@ def cad_crecientes(n):
   return new
 
 def cad_con_subcad(n, b, subcad):
+  """
+    Genera todas las cadenas de longitud n con dígitos del 0 al b-1, que contienen
+    la subcadena 'subcad'.
 
+    Parámetros:
+    n (int): Longitud de las cadenas a generar.
+    b (int): Base numérica de los dígitos (ejemplo: para dígitos 0-9, b es 10).
+    subcad (str): La subcadena que debe estar presente en las cadenas generadas.
+
+    Retorna:
+    list: Una lista de cadenas que contienen la subcadena especificada.
+  """
   if n < len(subcad):
     return []
 
@@ -70,7 +101,18 @@ def cad_con_subcad(n, b, subcad):
   return new
 
 def cad_sin_restr(n, b, restr):
+  """
+    Genera todas las cadenas de longitud n con dígitos del 0 al b-1, excluyendo
+    combinaciones específicas dadas en 'restr'.
 
+    Parámetros:
+    n (int): Longitud de las cadenas a generar.
+    b (int): Base numérica de los dígitos (ejemplo: para dígitos 0-9, b es 10).
+    restr (list): Lista de combinaciones de dígitos a excluir.
+
+    Retorna:
+    list: Una lista de cadenas que no contienen las combinaciones restringidas.
+  """
   if n == 0:
     return ['']
   if n == 1:

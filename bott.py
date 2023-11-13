@@ -23,7 +23,7 @@ async def ayuda_command(update, context):
     await update.message.reply_text(
         "Bienvenido al Bot de Asistencia 'cucharadita diaria'. Aquí tienes algunos comandos que puedes usar:\n"
         +"/start - Mensaje de bienvenida.\n"
-        +"/ayuda - Indica los comandos disponibles y su función.\n"
+        +"Elige algunas de las funciones que quieres usar de nuestro bot:\n"
         +"/cifrado - Permite cifrar o descifrar un mensaje de acuerdo al cifrado césar.\n"
         +"/markov - Permite generar textos con cadenas de Markov partiendo de una URL.\n"
         +"/rrlnhcc - Resuelve una recurrencia lineal no homogénea con coeficientes constantes.\n"

@@ -4,6 +4,16 @@ from sympy import Function, rsolve, Symbol
 
 
 def sol_rrlnhcc(input_str):
+    """
+    Esta función resuelve recurrencias lineales homogéneas con coeficientes constantes.
+    Utiliza la biblioteca sympy para manejar expresiones matemáticas simbólicas.
+
+    Parámetros:
+    input_str (str): Una cadena de texto que representa la ecuación de recurrencia y las condiciones iniciales.
+
+    Retorna:
+    Una tupla que contiene la expresión cerrada de la secuencia y algunos valores de la misma.
+    """
 
     # Define la función f(n) simbólicamente
     f = Function('f')
